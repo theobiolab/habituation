@@ -1,0 +1,1 @@
+Code to simulate habituation of a system defined as a set of ODEs in response to a square-wave input and calculate relevant properties like habituation time (ht) and recovery time (rt). Specific systems with appropriate parameter sets are also provided. 
