@@ -1,0 +1,51 @@
+#include <iostream>
+#include <fstream>
+#include<boost/array.hpp>
+
+#include "sensitivity.h"
+
+using namespace std;
+
+
+
+// ------------------------------------
+// The main program
+// ------------------------------------
+
+int main()
+{    
+    vector<double> geny(14);
+    //ifstream testFile("/home/sol/Escritorio/lina_cplusplus_FEEDBACK/data/system_single.txt"); // linux
+    ifstream testFile("/Users/Maria/Desktop/phd/habituation/sensitivity_feedforward_concat/system_single.txt");  // windows   
+    string line;
+    double ht_13, ht_19, ht_25;
+    while(getline(testFile, line)){
+        std::replace(line.begin(), line.end(), ',', ' ');
+
+        stringstream ss(line);
+        ss >> geny[0];
+        ss >> geny[1];
+        ss >> geny[2];
+        ss >> geny[3];
+        ss >> geny[4];
+        ss >> geny[5];
+        ss >> geny[6];
+        ss >> geny[7];
+        ss >> geny[8];
+        ss >> geny[9];
+        ss >> geny[10];
+        ss >> geny[11];
+        ss >> geny[12];
+        ss >> geny[13];
+
+        string ff = "sensitivity_feedforward_.txt";
+        const char* filename = ff.data();
+        int sens_analy = sensitivity(geny, filename);
+        //cout << validation << endl; 
+    }
+    testFile.close();
+    return 0;   
+}
+
+
+
