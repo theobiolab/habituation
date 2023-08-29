@@ -4,7 +4,6 @@
 
 #include<boost/array.hpp>
 #include <boost/numeric/odeint.hpp>
-//#include "system_feedback.h"
 #include "system.h"
 
 //#define not_opt
@@ -89,7 +88,7 @@ double adaint_recovery(vector<double> &result, double T,  double Amax, const vec
         
         t = t+T - ton;
 
-        // calculo maximos 
+        // max element 
         int row = (max_element(output_variable.end()-Ton_duration-Toff_duration, output_variable.end()) - output_variable.begin());
         peaks_level.push_back(output_variable[row]);
         peaks_time.push_back(times[row]);
@@ -158,7 +157,7 @@ double adaint_recovery(vector<double> &result, double T,  double Amax, const vec
         
         while (dt > 0)
         {
-            //cout << dt << endl;
+            
             state_type x_pert= x_vec_recov[resul_t+dt-1];
             double t_pert = 0.0;
             vector<double> output_variable_pert;
@@ -171,7 +170,7 @@ double adaint_recovery(vector<double> &result, double T,  double Amax, const vec
         
             t_pert = t_pert+T - ton;
 
-            // calculo maximos 
+            // max 
             int row = (max_element(output_variable_pert.begin(), output_variable_pert.end()) - output_variable_pert.begin());
             double post_recovery_peak = output_variable_pert[row]/first_peak;
             
@@ -179,11 +178,11 @@ double adaint_recovery(vector<double> &result, double T,  double Amax, const vec
             if (post_recovery_peak<0.9495)
             {
                 resul_t = resul_t + dt;
-                //cout << resul_t << endl;
+                
             }
 
             dt = (int)(dt / 2);
-            //cout << dt << endl;
+            
             
         }
 

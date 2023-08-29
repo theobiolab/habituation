@@ -3,7 +3,6 @@
 #include<boost/array.hpp>
 #include "adaint_recovery.h"
 
-// double max_peak_height = 0.95; para ht y recov
 
 using namespace std;
 
@@ -17,7 +16,7 @@ const double a3 = 30.0;
 
 vector<double> divideByNextElement(vector<double>& input) {
     vector<double> result;
-    result.reserve(input.size() - 1); // We'll have one less element in the result
+    result.reserve(input.size() - 1); 
 
     for (size_t i = 0; i < input.size() - 1; ++i) 
     {
@@ -56,7 +55,7 @@ int real_value(const vector<double> &geny, int print)
             for(int j=0 ; j<amplitudes.size() ; ++j)
             {
                 valor=adaint_recovery(resultados, periods[i], amplitudes[j], geny, 0, filename, 1);
-                //cout << valor << endl;
+                
                 if (valor>=50.0)
                     {
                         valor = 0.0;
@@ -89,7 +88,7 @@ int real_value(const vector<double> &geny, int print)
     int intensity_sens = 0;
     for(int i=0;i<hts.size() ; ++i)
     {
-        tmp = hts[i]; // periodo fijo 
+        tmp = hts[i]; // fixed period 
         if ( std::all_of(tmp.begin(), tmp.end(), [min_peak_height](double y) { return y > min_peak_height; })  )
         {
             vector<double> result = divideByNextElement(tmp);
@@ -125,8 +124,8 @@ int real_value(const vector<double> &geny, int print)
 
         for(int i=0;i<transposed.size() ; ++i)
         {
-            tmpf = transposed[i]; // hts amplitud fijo 
-            tmpff = transposedrts[i]; // rts amplitud fija
+            tmpf = transposed[i]; // hts fixed intensity  
+            tmpff = transposedrts[i]; // rts fixed intensity 
             if ( std::all_of(tmpf.begin(), tmpf.end(), [min_peak_height](double y) { return y > min_peak_height; })  )
             {
                 vector<double> resultf = divideByNextElement(tmpf);

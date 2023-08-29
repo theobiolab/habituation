@@ -15,7 +15,6 @@ using namespace std;
 int main()
 {    
     vector<double> geny(14);
-    //ifstream testFile("/home/sol/Escritorio/lina_cplusplus_FEEDBACK/data/system_single.txt"); // linux
     ifstream testFile("/Users/Maria/Desktop/phd/habituation/sensitivity_feedforward_concat/system_single.txt");  // windows   
     string line;
     double ht_13, ht_19, ht_25;
@@ -41,7 +40,6 @@ int main()
         string ff = "sensitivity_feedforward_.txt";
         const char* filename = ff.data();
         int sens_analy = sensitivity(geny, filename);
-        //cout << validation << endl; 
     }
     testFile.close();
     return 0;   
