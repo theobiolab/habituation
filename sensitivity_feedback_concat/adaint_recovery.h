@@ -4,7 +4,7 @@
 
 #include<boost/array.hpp>
 #include <boost/numeric/odeint.hpp>
-#include "system.h"
+#include "system_feedback.h"
 
 
 using namespace std;
@@ -137,7 +137,7 @@ double adaint_recovery(vector<double> &result, double T,  double Amax, const vec
     if ((recovery_true) && (result[0]<50))
     {
         t = n_times[n_times.size()-1];
-        double tmax= T*pow(2,10) + n_times[n_times.size()-1];
+        double tmax= T*pow(2,12) + n_times[n_times.size()-1];
         state_type x_recov = n_x_vec[n_x_vec.size()-1];
         double first_peak = peaks_level[0];
 
@@ -156,7 +156,7 @@ double adaint_recovery(vector<double> &result, double T,  double Amax, const vec
         
         while (dt > 0)
         {
-            
+            //cout << dt << endl;
             state_type x_pert= x_vec_recov[resul_t+dt-1];
             double t_pert = 0.0;
             vector<double> output_variable_pert;
@@ -169,7 +169,7 @@ double adaint_recovery(vector<double> &result, double T,  double Amax, const vec
         
             t_pert = t_pert+T - ton;
 
-            // max element
+            // max 
             int row = (max_element(output_variable_pert.begin(), output_variable_pert.end()) - output_variable_pert.begin());
             double post_recovery_peak = output_variable_pert[row]/first_peak;
             

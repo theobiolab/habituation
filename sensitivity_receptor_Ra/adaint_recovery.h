@@ -4,7 +4,7 @@
 
 #include<boost/array.hpp>
 #include <boost/numeric/odeint.hpp>
-#include "system.h"
+#include "system_feedback_ra.h"
 
 
 using namespace std;
@@ -13,23 +13,21 @@ using namespace std::chrono;
 
 
 
-const double ton = 1.11;
+const double ton = 1.0;
 
 typedef boost::array< double , 6 > state_type;
 
 struct push_back_state_and_time
 {
     std::vector< state_type >& m_states;
-    std::vector< double >& m_out_states;
     std::vector< double >& m_times;
 
-    push_back_state_and_time( std::vector< state_type > &states , std::vector< double > &out, std::vector< double > &times )
-    : m_states( states ) , m_out_states( out ) , m_times( times ) { }
+    push_back_state_and_time( std::vector< state_type > &states , std::vector< double > &times )
+    : m_states( states ) , m_times( times ) { }
 
     void operator()( const state_type &x_recov , double t )
     {
         m_states.push_back( x_recov );
-        m_out_states.push_back( x_recov[5] );
         m_times.push_back( t );
     }
 };
@@ -49,13 +47,13 @@ double adaint_recovery(vector<double> &result, double T,  double Amax, const vec
 
 
     runge_kutta4< state_type > rk4; 
-    double step_size = 0.01;
+    double step_size = 0.001;
     int Ton_duration = int(ton / step_size) ;
     int Toff_duration = int((T - ton)/step_size) ; 
     double max_integration_time = 5*T*10.0; 
     
 
-    state_type x = { 0.0 , 0.0 , 0.0 , 0.0, 0.0, 0.0};
+    state_type x = { 1.0 , 0.0 , 0.0 , 0.0, 0.0, 0.0};
     vector<state_type> x_vec;
     vector<double> times;
     vector<double> output_variable;
@@ -79,15 +77,37 @@ double adaint_recovery(vector<double> &result, double T,  double Amax, const vec
     while (t <= max_integration_time)
     {
         ht+=1;
+        for( size_t i=0 ; i<Ton_duration ; ++i )
+        {
+            rk4.do_step( sys , x , t , step_size);
+            t += step_size;
+            times.push_back(t);
+            x_vec.push_back(x);
+            output_variable.push_back(x[5]);
+        }
         
-        integrate_const(make_controlled( 1E-12 , 1E-12 , runge_kutta_dopri5< state_type >() ) , sys , x , t , t+ton , step_size, push_back_state_and_time( x_vec ,output_variable, times ) );
-        t = t+ton;
-        
-        integrate_const(make_controlled( 1E-12 , 1E-12 , runge_kutta_dopri5< state_type >() ) , sys2 , x , t , t+T - ton , step_size, push_back_state_and_time( x_vec ,output_variable, times ) );
-        
-        t = t+T - ton;
+        if ( (std::any_of(x.begin(), x.end(), [min_peak_height](double y) { return y < min_peak_height; })) || (std::any_of(x.begin(), x.end(), [max_peak_height](double y) { return y > max_peak_height; })) || (std::any_of(x.begin(), x.end(), [](double d) { return std::isnan(d); } )) )
+        {
+            return 60.0;
+            break;
+        }
 
-        // max element 
+        for( size_t i=0 ; i<Toff_duration ; ++i )
+        {
+            rk4.do_step( sys2 , x , t , step_size);
+            t += step_size;
+            times.push_back(t);
+            x_vec.push_back(x);
+            output_variable.push_back(x[5]);
+        }
+
+        if ( (std::any_of(x.begin(), x.end(), [min_peak_height](double y) { return y < min_peak_height; })) || (std::any_of(x.begin(), x.end(), [max_peak_height](double y) { return y > max_peak_height; })) || (std::any_of(x.begin(), x.end(), [](double d) { return std::isnan(d); } )) )
+        {
+            return 60.0;
+            break;
+        }
+
+        // max element  
         int row = (max_element(output_variable.end()-Ton_duration-Toff_duration, output_variable.end()) - output_variable.begin());
         peaks_level.push_back(output_variable[row]);
         peaks_time.push_back(times[row]);
@@ -102,7 +122,7 @@ double adaint_recovery(vector<double> &result, double T,  double Amax, const vec
         }
     }
     
-    result[0] = ht-1;
+    result[0] = ht - 1;
     if (print)
     {
         std::ofstream myfile;
@@ -120,6 +140,7 @@ double adaint_recovery(vector<double> &result, double T,  double Amax, const vec
             }
         myfile.close();
     }
+
     vector<state_type> n_x_vec;
     vector<double> n_times;
     vector<double> n_output_variable;
@@ -137,55 +158,72 @@ double adaint_recovery(vector<double> &result, double T,  double Amax, const vec
     if ((recovery_true) && (result[0]<50))
     {
         t = n_times[n_times.size()-1];
-        double tmax= T*pow(2,10) + n_times[n_times.size()-1];
+        double tmax= T*pow(2,12) + n_times[n_times.size()-1];
         state_type x_recov = n_x_vec[n_x_vec.size()-1];
-        double first_peak = peaks_level[0];
+        double first_peak = peaks_level[0]; 
 
-        vector<state_type> x_vec_recov; // recovery_trajectory
+        double step_size_big = 0.01;
+
+        vector<state_type> x_vec_recov;
         vector<double> times_rec;
 
-         
-        integrate_const(make_controlled( 1E-12 , 1E-12 , runge_kutta_dopri5< state_type >() ) , sys2 , x_recov , t , tmax , step_size, push_back_state_and_time( x_vec_recov ,n_output_variable,  times_rec ) );
+        
+        integrate_const(make_controlled( 1E-12 , 1E-12 , runge_kutta_dopri5< state_type >() ) , sys2 , x_recov , t , tmax , step_size_big, push_back_state_and_time( x_vec_recov , times_rec ) );
         
 
     
         // perturbation
-        int dt = (int)((double)x_vec_recov.size()/2);
+        int dt = x_vec_recov.size();
         int resul_t = 0;
         
         
         while (dt > 0)
         {
-            
             state_type x_pert= x_vec_recov[resul_t+dt-1];
             double t_pert = 0.0;
             vector<double> output_variable_pert;
             
-            integrate_const(make_controlled( 1E-12 , 1E-12 , runge_kutta_dopri5< state_type >() ) , sys , x_pert , t_pert , t_pert+ton , step_size, push_back_state_and_time( x_vec ,output_variable_pert, times ) );
-            t_pert = t_pert+ton;
+            for( size_t i=0 ; i<Ton_duration ; ++i )
+            {
+                rk4.do_step( sys , x_pert , t_pert , step_size);
+                t_pert += step_size;
+                output_variable_pert.push_back(x_pert[5]);
+            }
             
-            
-            integrate_const(make_controlled( 1E-12 , 1E-12 , runge_kutta_dopri5< state_type >() ) , sys2 , x_pert , t_pert , t_pert+T - ton , step_size, push_back_state_and_time( x_vec ,output_variable_pert, times ) );
-        
-            t_pert = t_pert+T - ton;
+            if ( (std::any_of(x_pert.begin(), x_pert.end(), [min_peak_height](double y) { return y < min_peak_height; })) || (std::any_of(x_pert.begin(), x_pert.end(), [max_peak_height](double y) { return y > max_peak_height; })) || (std::any_of(x_pert.begin(), x_pert.end(), [](double d) { return std::isnan(d); } )) )
+            {
+                return 60.0;
+                break;
+            }
 
-            // max element
-            int row = (max_element(output_variable_pert.begin(), output_variable_pert.end()) - output_variable_pert.begin());
+            for( size_t i=0 ; i<Toff_duration ; ++i )
+            {
+                rk4.do_step( sys2 , x_pert , t_pert , step_size);
+                t_pert += step_size;
+                output_variable_pert.push_back(x_pert[5]);
+            }
+
+            if ( (std::any_of(x_pert.begin(), x_pert.end(), [min_peak_height](double y) { return y < min_peak_height; })) || (std::any_of(x_pert.begin(), x_pert.end(), [max_peak_height](double y) { return y > max_peak_height; })) || (std::any_of(x_pert.begin(), x_pert.end(), [](double d) { return std::isnan(d); } )) )
+            {
+                return 60.0;
+                break;
+            }
+
+            // max element  
+            int row = (max_element(output_variable_pert.end()-Ton_duration-Toff_duration, output_variable_pert.end()) - output_variable_pert.begin());
             double post_recovery_peak = output_variable_pert[row]/first_peak;
             
 
-            if (post_recovery_peak<0.9495)
+            if (post_recovery_peak<0.95)
             {
                 resul_t = resul_t + dt;
-                
             }
 
             dt = (int)(dt / 2);
             
-            
         }
 
-        double recovery_time = (resul_t+1)*step_size;
+        double recovery_time = resul_t*step_size_big;
         result[1] = recovery_time;
     }
     else

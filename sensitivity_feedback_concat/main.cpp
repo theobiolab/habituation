@@ -12,10 +12,11 @@ using namespace std;
 // The main program
 // ------------------------------------
 
+
 int main()
 {    
     vector<double> geny(14);
-    ifstream testFile("/Users/Maria/Desktop/phd/habituation/sensitivity_feedforward_concat/system_single.txt");    
+    ifstream testFile("/Users/Maria/Desktop/phd/habituation/sensitivity_feedback_concat/system_single.txt");    
     string line;
     
     while(getline(testFile, line)){
@@ -37,9 +38,9 @@ int main()
         ss >> geny[12];
         ss >> geny[13];
 
-        string ff = "sensitivity_feedforward_.txt";
+        string ff = "sensitivity_feedback_.txt";
         const char* filename = ff.data();
-        int sens_analy = sensitivity(geny, filename);
+        int sens_analy = sensitivity(geny, filename); 
     }
     testFile.close();
     return 0;   
