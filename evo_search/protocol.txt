@@ -1,0 +1,1 @@
+Download paradiseo v3.0.0 (https://github.com/nojhan/paradiseo). Inside the Lesson 4 tutorial, place the cost function files provided here. The cost function file is named real_value.h, and it uses the systm.h and adaint.h to calcualte the cost of a given parameter set. Compile and run as explained in the paradiseo documentation.
