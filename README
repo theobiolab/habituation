@@ -1,7 +1,9 @@
-Code to reproduce the simulations and figures in the paper "Learning in single cells: biochemically-plausible models of habituation" by Lina Eckert, Maria Sol Vidal, Ziyuan Zhao, Jordi Garcia-Ojalvo, Rosa Martinez-Corral and Jeremy Gunawardena. 
+Code to reproduce the simulations and figures in the following paper:
 
-Once the paper is published the reference will be added. 
+Biochemically plausible models of habituation for single cell learning.
+Lina Eckert, Maria Sol Vidal-Saez, Ziyuan Zhao, Jordi Garcia-Ojalvo, Rosa Martinez-Corral and Jeremy Gunawardena.
+Current Biology, 34, 1-13. 2024. 
 
 The code allows to simulate habituation of a system defined as a set of ODEs in response to a square-wave input and calculate relevant properties like habituation time (ht) and recovery time (rt). Specific systems with appropriate parameter sets are also provided.
-
-Note: in the receptor_feedforward.ipynb and receptor_Ra.ipynb the variables R and Ri are named in reverse than in the paper.
+All figure papers can be reproduced from the notebook paper_figures_all.
+There is also the code to reproduce the models originally proposed by Staddon, as we discuss in the paper. 
